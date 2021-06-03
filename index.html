@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seuss Treasury</title>
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/vue-router@4"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    header {
+      background-color: #d3d3d3;
+      padding: 20px 10px;
+    }
+
+    header span {
+      font-size: 30px;
+      margin-right: 10px;
+    }
+
+    header a {
+      color: gray;
+      display: inline-block;
+      margin-left: 10px;
+      font-size: 20px;
+      text-decoration: none;
+    }
+
+    header a.active {
+      color: black;
+      font-weight: bold;
+    }
+
+    header p {
+      text-align: center;
+      font-size: 72px;
+      font-weight: bold;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 40px 100px;
+    }
+
+    .book-container {
+      box-sizing: border-box;
+      padding: 5px 10px;
+      width: 25%;
+    }
+
+    .book-container img {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .book-image {
+      width: 100%;
+      max-width: 450px;
+      margin-bottom: 10px;
+    }
+
+    .book-content {
+      flex: 1;
+      padding: 0 20px;
+    }
+
+    .book-content .book-title {
+      font-size: 40px;
+      font-weight: bold;
+      margin: 0 0 20px;
+    }
+
+    .book-content .book-description {
+      font-size: 25px;
+      margin: 0;
+    }
+
+    .quote-content {
+      box-sizing: border-box;
+      padding: 20px 10px;
+      width: 50%;
+    }
+
+    .quote-content .quote-border {
+      border: 1px solid #d5d5d5;
+      padding: 10px;
+    }
+
+    .quote-content .quote-border .quote-text {
+      font-size: 25px;
+      font-weight: bold;
+      margin: 0 0 10px;
+    }
+
+    .quote-content .quote-border .quote-title {
+      color: gray;
+      margin: 0;
+    }
+
+    .quote-content .quote-border .quote-title span {
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <span>Seuss Treasury</span>
+      <router-link to="/" :class="{ 'active' : $route.path == '/' }">Books</router-link>
+      <router-link to="/quotes" :class="{ 'active' : $route.path == '/quotes' }">Quotes</router-link>
+      <p class="title">Seuss Treasury</p>
+    </header>
+    
+    <router-view></router-view>
+  </div>
+
+  <script>
+    const Books = {
+      data: () => ({
+        books: []
+      }),
+      template: `
+        <div class="container">
+          <router-link :to="'/book/' + book.id" v-for="book in books" class="book-container">
+            <img :src="book.image">
+          </router-link>
+        </div>
+      `,
+      mounted: function() {
+        fetch('https://seussology.info/api/books')
+          .then(response => response.json())
+          .then(json => { this.books = json })
+      }
+    }
+
+    const Book = { 
+      data: () => ({
+        book: {}
+      }),
+      template: `
+        <div class="container">
+          <img class="book-image" :src="book.image">
+          <div class="book-content">
+            <p class="book-title">{{book.title}}</p>
+            <p class="book-description">{{book.description}}</p>
+          </div>
+        </div>
+      `,
+      mounted: function() {
+        fetch('https://seussology.info/api/books/' + this.$route.params.id)
+          .then(response => response.json())
+          .then(json => { this.book = json })
+      }
+    }
+
+    const Quotes = { 
+      data: () => ({
+        quotes: []
+      }),
+      template: `
+        <div class="container">
+          <div class="quote-content" v-for="quote in quotes">
+            <div class="quote-border">
+              <p class="quote-text">{{quote.text}}</p>
+              <p class="quote-title">
+                - Dr.Seuss in <span>{{quote.title}}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      mounted: function() {
+        fetch('https://seussology.info/api/quotes/random/10')
+          .then(response => response.json())
+          .then(json => { this.quotes = json })
+      }
+    }
+
+    const routes = [
+      { path: '/', component: Books },
+      { path: '/book/:id', component: Book },
+      { path: '/quotes', component: Quotes }
+    ]
+
+    const router = VueRouter.createRouter({
+      history: VueRouter.createWebHashHistory(),
+      routes
+    })
+
+    const app = Vue.createApp({})
+
+    app.use(router)
+
+    app.mount('#app')
+  </script>
+</body>
+</html>
